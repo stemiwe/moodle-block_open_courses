@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 20180426;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017110800;        // Requires this Moodle version
+$plugin->version   = 2018042600;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->requires  = 2015111600;        // Requires this Moodle version
 $plugin->component = 'block_open_courses'; // Full name of the plugin (used for diagnostics)
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release   = 'v1.0';
