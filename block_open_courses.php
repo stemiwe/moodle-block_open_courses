@@ -15,16 +15,69 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'block_course_list', language 'en', branch 'MOODLE_20_STABLE'
+ * Open Courses block.
  *
  * @package    block_open_courses
- * @copyright  Stefan Weber, FH Technikum Wien (webers@technikum-wien.at)
+ * @copyright  2018 onwards Stefan Weber, FH Technikum Wien (webers@technikum-wien.at)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Open Courses';
-$string['description'] = 'You can view these courses as guest';
-$string['adminmsg'] = 'You can view all courses as admin :)';
-$string['privacy:metadata'] = 'The Open Courses block only shows data about courses and does not store any data itself.';
-$string['open_courses:addinstance'] = 'Add a new Open Courses block';
-$string['open_courses:myaddinstance'] = 'Add a new Open Courses block to the My Moodle page';
+include_once($CFG->dirroot . '/course/lib.php');
+include_once($CFG->libdir . '/coursecatlib.php');
+
+class block_open_courses extends block_list {
+    function init() {
+        $this->title = get_string('pluginname', 'block_open_courses');
+    }
+
+    function get_content() {
+        global $CFG, $USER, $DB, $OUTPUT;
+
+        if($this->content !== NULL) {
+            return $this->content;
+        }
+
+        $this->content = new stdClass;		
+        $this->content->items = array();
+        $this->content->icons = array();		
+		
+		$this->content->items[]= get_string('description', 'block_open_courses');
+		$this->content->items[]= "<br>";
+        
+        $icon = $OUTPUT->pix_icon('i/course', get_string('course'));
+       
+		$sortorder = 'visible DESC,sortorder ASC';
+		$accesscourses = enrol_get_my_courses(NULL, $sortorder, 0, [], true); //get all courses the user can view
+		$mycourses = enrol_get_my_courses(NULL, $sortorder, 0, [], false); //get all courses the user is enrolled in
+		
+		//skip for admins
+		if (has_capability('moodle/course:update', context_system::instance())) {
+			$this->content->items[] = get_string('adminmsg', 'block_open_courses');
+		}
+		else {
+		
+			//collect courses the user can view but is not enrolled in
+			foreach ($accesscourses as $course) {
+				if(!in_array ($course, $mycourses)) {
+					$opencourses[] = $course;
+				}
+			}		
+			
+			//display courses
+			foreach ($opencourses as $course) {
+				
+					$coursecontext = context_course::instance($course->id);
+					$linkcss = $course->visible ? "" : " class=\"dimmed\" ";
+					$this->content->items[]="<a $linkcss title=\"" . format_string($course->shortname, true, array('context' => $coursecontext)) . "\" ".
+							   "href=\"$CFG->wwwroot/course/view.php?id=$course->id\">".$icon.format_string(get_course_display_name_for_list($course)). "</a>";
+				
+			}
+			$this->title = get_string('pluginname', 'block_open_courses');
+		
+		}
+		   
+    }
+
+}
+
+
